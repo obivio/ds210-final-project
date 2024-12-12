@@ -1,22 +1,33 @@
-mod graph_preprocessing;
+mod algorithm;
+mod graphdata;
 
-use graph_preprocessing::{load_graph, sample_graph, save_graph};
+use algorithm::dijkstra;
+use graphdata::preprocess_graph_with_sampling;
 
-fn main() -> std::io::Result<()> {
-    let input_file = "src/amazon0302.txt"; // Path to the full dataset
-    let output_file = "./subset_graph.txt"; // Path for the preprocessed subset
-    let num_nodes = 10000; // Number of nodes to sample
+fn main() {
+    // Define the dataset file path and sampling parameters
+    let file_path = "src/amazon0302.txt"; // Update this with your dataset's actual path
+    let sample_size = 10000; // Specify the number of nodes to sample
 
-    // Load the graph
-    let edges = load_graph(input_file)?;
+    // Preprocess the graph with sampling
+    match preprocess_graph_with_sampling(file_path, sample_size) {
+        Ok(graph) => {
+            println!("Sampled graph loaded with {} nodes.", graph.len());
 
-    // Sample a subset
-    let sampled_edges = sample_graph(&edges, num_nodes);
+            // Define a starting node for the algorithm
+            let start_node = 1; // Adjust this to a valid node in your graph
 
-    // Save the subset
-    save_graph(&sampled_edges, output_file)?;
+            // Run Dijkstra's Algorithm on the sampled graph
+            let distances = dijkstra(&graph, start_node);
 
-    println!("Subset of the graph saved to {}", output_file);
-
-    Ok(())
+            // Display the shortest distances
+            println!("Shortest distances from node {}:", start_node);
+            for (node, distance) in &distances {
+                println!("Node {}: Distance {}", node, distance);
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to preprocess the graph: {}", e);
+        }
+    }
 }
